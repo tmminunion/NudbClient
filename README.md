@@ -46,4 +46,4 @@ db.get('config', (data) => {
 - `push(path, data)` - Push data with auto-generated ID
 - `update(path, data)` - Update existing data
 - `delete(path)` - Delete data
-- `close()` - Close connection# NudbClient
+- `close()` - Close connection
