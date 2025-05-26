@@ -15,12 +15,24 @@ export class NuDB extends NuDBCore {
       this._resubscribe();
     });
 
-    this.socket.on('message', this._handleMessage.bind(this));
-    this.socket.on('close', this._handleClose.bind(this));
+    // Use arrow functions to maintain 'this' context
+    this.socket.on('message', (data) => this._handleMessage(data));
+    this.socket.on('close', () => this._handleClose());
     this.socket.on('error', (err) => {
       console.error("NuDB WebSocket error:", err);
     });
   }
 
-  // ... (same helper methods as browser implementation)
+  _processQueue() {
+    while (this.queue.length > 0) {
+      const action = this.queue.shift();
+      this.socket.send(JSON.stringify(action));
+    }
+  }
+
+  _resubscribe() {
+    Object.keys(this.listeners).forEach((path) => {
+      this.sendMessage({ type: "subscribe", path });
+    });
+  }
 }

@@ -20,6 +20,30 @@ class NuDBCore {
     this.connect();
   }
 
+  // ... existing code ...
+
+  _handleMessage(data) {
+    try {
+      const msg = JSON.parse(data);
+      if (msg.type === "update" && this.listeners[msg.path]) {
+        this.listeners[msg.path].forEach(callback => callback(msg.data));
+      }
+      if (msg.type === "data" && this.dataCallbacks[msg.path]) {
+        this.dataCallbacks[msg.path].forEach(callback => callback(msg.data));
+        delete this.dataCallbacks[msg.path];
+      }
+    } catch (err) {
+      console.error("Message handling error:", err);
+    }
+  }
+
+  _handleClose() {
+    console.log("WebSocket disconnected, reconnecting...");
+    setTimeout(() => this.connect(), 3000);
+  }
+
+  // ... rest of your existing code ...
+
   _generateId() {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let str = "";
@@ -115,14 +139,26 @@ class NuDB$2 extends NuDBCore {
       this._resubscribe();
     });
 
-    this.socket.on('message', this._handleMessage.bind(this));
-    this.socket.on('close', this._handleClose.bind(this));
+    // Use arrow functions to maintain 'this' context
+    this.socket.on('message', (data) => this._handleMessage(data));
+    this.socket.on('close', () => this._handleClose());
     this.socket.on('error', (err) => {
       console.error("NuDB WebSocket error:", err);
     });
   }
 
-  // ... (same helper methods as browser implementation)
+  _processQueue() {
+    while (this.queue.length > 0) {
+      const action = this.queue.shift();
+      this.socket.send(JSON.stringify(action));
+    }
+  }
+
+  _resubscribe() {
+    Object.keys(this.listeners).forEach((path) => {
+      this.sendMessage({ type: "subscribe", path });
+    });
+  }
 }
 
 class NuDB$1 extends NuDBCore {

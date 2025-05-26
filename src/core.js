@@ -10,6 +10,30 @@ export class NuDBCore {
     this.connect();
   }
 
+  // ... existing code ...
+
+  _handleMessage(data) {
+    try {
+      const msg = JSON.parse(data);
+      if (msg.type === "update" && this.listeners[msg.path]) {
+        this.listeners[msg.path].forEach(callback => callback(msg.data));
+      }
+      if (msg.type === "data" && this.dataCallbacks[msg.path]) {
+        this.dataCallbacks[msg.path].forEach(callback => callback(msg.data));
+        delete this.dataCallbacks[msg.path];
+      }
+    } catch (err) {
+      console.error("Message handling error:", err);
+    }
+  }
+
+  _handleClose() {
+    console.log("WebSocket disconnected, reconnecting...");
+    setTimeout(() => this.connect(), 3000);
+  }
+
+  // ... rest of your existing code ...
+
   _generateId() {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let str = "";

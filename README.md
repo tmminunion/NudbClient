@@ -5,40 +5,45 @@ NuDB is a lightweight realtime database that works in both Node.js and browser e
 ## Installation
 
 ```bash
-npm install nudb
+npm install nudbclient
 # or
-yarn add nudb
+yarn add nudblient
 ```
 
 ## Usage
 
 ### Browser
 ```javascript
-import NuDB from 'nudb';
-
-const db = new NuDB('ws://your-server-url');
+<script src="dist/browser.js"></script>
+<script>
+  const db = new Nudb("ws://localhost:8008");
+  db.get("/test", (data) => console.log(data));
 
 db.on('messages', (data) => {
   console.log('New message:', data);
 });
 
 db.set('messages/123', { text: 'Hello world' });
+</script>
 ```
 
 ### Node.js
 ```javascript
-const { NuDB } = require('nudb');
+const Nudb = require('nudbclient'); // dari dist/node.js
 
-const db = new NuDB('ws://your-server-url');
-
-db.get('config', (data) => {
-  console.log('Server config:', data);
+const db = new Nudb("ws://localhost:8008");
+db.get("/test", (data) => {
+  console.log(data);
+});
+// Dengarkan perubahan pada path "/users"
+db.on("messages", (data) => {
+  console.log("Data terbaru dari /users:", data);
 });
 ```
 
 ## API
 
-- `new NuDB(url, options)` - Create new connection
+- `new Nudb(url, options)` - Create new connection
 - `setHeader(key, value)` - Set authentication headers
 - `on(path, callback)` - Subscribe to data changes
 - `get(path, callback)` - Get data once
